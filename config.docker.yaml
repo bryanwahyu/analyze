@@ -1,0 +1,22 @@
+server:
+  port: 5000
+
+database:
+  host: db
+  port: 3306
+  user: root
+  password: example
+  name: music_analyze
+
+minio:
+  endpoint: 127.0.0.1
+  accessKey: dummy
+  secretKey: dummy
+  bucketName: dummy
+  region: us-east-1
+  useSSL: false
+
+openai:
+  apiKey: ""
+  model: "gpt-4o-mini"
+

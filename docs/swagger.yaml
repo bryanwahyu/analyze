@@ -1,0 +1,206 @@
+basePath: /
+definitions:
+  analyst.AgentSales:
+    properties:
+      agent_name:
+        type: string
+      employee_id:
+        type: integer
+      total_sales:
+        type: number
+      transactions:
+        type: integer
+    type: object
+  analyst.CountryAvgOrder:
+    properties:
+      avg_order_value:
+        type: number
+      country:
+        type: string
+      orders:
+        type: integer
+    type: object
+  analyst.CountryCustomers:
+    properties:
+      country:
+        type: string
+      customer_count:
+        type: integer
+    type: object
+  analyst.HighestSaleInvoice:
+    properties:
+      first_name:
+        type: string
+      highest_total:
+        type: number
+      invoice_id:
+        type: integer
+      last_name:
+        type: string
+    type: object
+  analyst.InvoiceStats:
+    properties:
+      median_total:
+        type: number
+      mode_total:
+        type: number
+    type: object
+  analyst.MediaTypeSales:
+    properties:
+      media_sales:
+        type: number
+      media_type:
+        type: string
+      pct_of_total:
+        type: number
+    type: object
+  analyst.TopCountriesResponse:
+    properties:
+      by_avg_order:
+        items:
+          $ref: '#/definitions/analyst.CountryAvgOrder'
+        type: array
+      by_customers:
+        items:
+          $ref: '#/definitions/analyst.CountryCustomers'
+        type: array
+    type: object
+  analyst.TopGenre:
+    properties:
+      genre:
+        type: string
+      genre_sales:
+        type: number
+      pct_of_total:
+        type: number
+    type: object
+info:
+  contact: {}
+  description: API endpoints for music analytics derived from Chinook dataset.
+  title: Music Analyze API
+  version: "1.0"
+paths:
+  /analytics/agents:
+    get:
+      description: Total sales and transactions per support agent
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/analyst.AgentSales'
+            type: array
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get sales by agents
+      tags:
+      - analytics
+  /analytics/highest-sale:
+    get:
+      description: Highest invoice total(s) and corresponding customer names
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/analyst.HighestSaleInvoice'
+            type: array
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get highest sale invoices
+      tags:
+      - analytics
+  /analytics/invoice-stats:
+    get:
+      description: Median and mode of invoice totals
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analyst.InvoiceStats'
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get invoice statistics
+      tags:
+      - analytics
+  /analytics/media-types:
+    get:
+      description: Sales by media type with percentage of total
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/analyst.MediaTypeSales'
+            type: array
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get media type sales
+      tags:
+      - analytics
+  /analytics/top-countries:
+    get:
+      description: Returns top N countries by number of customers and average order
+        value
+      parameters:
+      - default: 5
+        description: Limit the number of countries
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analyst.TopCountriesResponse'
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get top countries stats
+      tags:
+      - analytics
+  /analytics/top-genres:
+    get:
+      description: Returns top N genres by total sales and percentage of total
+      parameters:
+      - default: 10
+        description: Limit the number of genres
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/analyst.TopGenre'
+            type: array
+        "500":
+          description: internal error
+          schema:
+            type: string
+      summary: Get top genres by sales
+      tags:
+      - analytics
+swagger: "2.0"

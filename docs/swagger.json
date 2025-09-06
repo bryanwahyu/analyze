@@ -1,0 +1,315 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API endpoints for music analytics derived from Chinook dataset.",
+        "title": "Music Analyze API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/analytics/agents": {
+            "get": {
+                "description": "Total sales and transactions per support agent",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get sales by agents",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/analyst.AgentSales"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/highest-sale": {
+            "get": {
+                "description": "Highest invoice total(s) and corresponding customer names",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get highest sale invoices",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/analyst.HighestSaleInvoice"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/invoice-stats": {
+            "get": {
+                "description": "Median and mode of invoice totals",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get invoice statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/analyst.InvoiceStats"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/media-types": {
+            "get": {
+                "description": "Sales by media type with percentage of total",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get media type sales",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/analyst.MediaTypeSales"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/top-countries": {
+            "get": {
+                "description": "Returns top N countries by number of customers and average order value",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get top countries stats",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 5,
+                        "description": "Limit the number of countries",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/analyst.TopCountriesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/analytics/top-genres": {
+            "get": {
+                "description": "Returns top N genres by total sales and percentage of total",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "analytics"
+                ],
+                "summary": "Get top genres by sales",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit the number of genres",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/analyst.TopGenre"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "analyst.AgentSales": {
+            "type": "object",
+            "properties": {
+                "agent_name": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "integer"
+                },
+                "total_sales": {
+                    "type": "number"
+                },
+                "transactions": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyst.CountryAvgOrder": {
+            "type": "object",
+            "properties": {
+                "avg_order_value": {
+                    "type": "number"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyst.CountryCustomers": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "type": "string"
+                },
+                "customer_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyst.HighestSaleInvoice": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "highest_total": {
+                    "type": "number"
+                },
+                "invoice_id": {
+                    "type": "integer"
+                },
+                "last_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "analyst.InvoiceStats": {
+            "type": "object",
+            "properties": {
+                "median_total": {
+                    "type": "number"
+                },
+                "mode_total": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyst.MediaTypeSales": {
+            "type": "object",
+            "properties": {
+                "media_sales": {
+                    "type": "number"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "pct_of_total": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyst.TopCountriesResponse": {
+            "type": "object",
+            "properties": {
+                "by_avg_order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/analyst.CountryAvgOrder"
+                    }
+                },
+                "by_customers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/analyst.CountryCustomers"
+                    }
+                }
+            }
+        },
+        "analyst.TopGenre": {
+            "type": "object",
+            "properties": {
+                "genre": {
+                    "type": "string"
+                },
+                "genre_sales": {
+                    "type": "number"
+                },
+                "pct_of_total": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+}

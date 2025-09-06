@@ -1,0 +1,60 @@
+########################
+# OS / Editors
+########################
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+
+########################
+# Go artifacts
+########################
+bin/
+build/
+dist/
+tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.cover
+*.coverprofile
+coverage.*
+cover.*
+profile.out
+go.work
+go.work.sum
+.gocache/
+.gomodcache/
+
+########################
+# Logs / PIDs
+########################
+*.log
+.server_pid
+
+########################
+# Env / Secrets
+########################
+.env
+.env.*
+config.yaml
+
+########################
+# Docker
+########################
+docker-compose.override.yml
+docker/*.env
+
+########################
+# Swagger docs
+########################
+# Keep generated docs tracked because code imports package `docs`.
+# (Do NOT ignore /docs)
+.server_pid*
