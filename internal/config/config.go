@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"gopkg.in/yaml.v3"
-
 )
 
 type Config struct {
@@ -20,20 +19,6 @@ type Config struct {
 		Password string `yaml:"password"`
 		Name     string `yaml:"name"`
 	} `yaml:"database"`
-
-	Minio struct {
-		Endpoint   string `yaml:"endpoint"`
-		AccessKey  string `yaml:"accessKey"`
-		SecretKey  string `yaml:"secretKey"`
-		BucketName string `yaml:"bucketName"`
-		Region     string `yaml:"region"`
-		UseSSL     bool   `yaml:"useSSL"`
-	} `yaml:"minio"`
-
-	OpenAI struct {
-		APIKey string `yaml:"apiKey"`
-		Model  string `yaml:"model"`
-	} `yaml:"openai"`
 }
 
 // Load baca file config.yaml
