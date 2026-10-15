@@ -1,8 +1,9 @@
 -- Chinook full dataset for MySQL, adapted for music_analyze
+SET NAMES utf8mb4;
 DROP DATABASE IF EXISTS music_analyze;
 CREATE DATABASE music_analyze DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci;
 USE music_analyze;
-﻿
+
 /*******************************************************************************
    Chinook Database - Version 1.4
    Script: Chinook_MySql.sql
