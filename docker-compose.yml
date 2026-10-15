@@ -1,11 +1,25 @@
-version: "3.9"
-
 services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./internal/infra/db/mysql/DB.sql:/docker-entrypoint-initdb.d/chinook.sql:ro
+    healthcheck:
+      test: ["CMD", "mysql", "-uroot", "-pexample", "-e", "SELECT 1 FROM music_analyze.invoice LIMIT 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
 
   app:
     build: .
-    container_name: music-analyze-app
+    environment:
+      CONFIG_PATH: /app/config.docker.yaml
     ports:
-      - "5000:5000"
+      - "${APP_PORT:-5000}:5000"
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
-

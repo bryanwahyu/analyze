@@ -24,8 +24,8 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates tzdata && adduser -D -u 10001 app
 
 COPY --from=builder /out/app /app/app
-# Copy default config; compose sets CONFIG_PATH to point to docker config
-COPY config.yaml /app/config.yaml
+COPY config.docker.yaml /app/config.docker.yaml
+ENV CONFIG_PATH=/app/config.docker.yaml
 
 EXPOSE 5000
 USER app
