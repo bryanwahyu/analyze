@@ -1,80 +1,101 @@
 # Music Analyze
 
-A small Go service that exposes analytics endpoints on the Chinook music dataset. It uses MySQL for storage, chi for routing, and Swagger (swaggo) for interactive API docs.
+[![CI](https://github.com/bryanwahyu/analyze/actions/workflows/ci.yml/badge.svg)](https://github.com/bryanwahyu/analyze/actions/workflows/ci.yml)
 
-## Features
-- Top genres by sales with percentage of total
-- Top countries by customers and by average order value
-- Sales by media type with percentage of total
-- Highest-sale invoices with customer names
-- Invoice statistics (median and mode)
-- Sales totals by support agents
+A small Go service that answers sales questions about the [Chinook](https://github.com/lerocha/chinook-database) music store dataset: which genres sell best, which countries buy the most, who the top support agents are, and the median and mode of invoice totals. MySQL, chi, Swagger.
 
-## Tech Stack
-- Go 1.22
-- Router: `github.com/go-chi/chi/v5`
-- MySQL driver: `github.com/go-sql-driver/mysql`
-- Swagger UI: `github.com/swaggo/http-swagger` + generated docs in `./docs`
+## Run it
 
-## Quick Start (Local)
-1. Configure MySQL connection in `config.yaml` (or copy `config.docker.yaml` and adjust):
-   - `server.port` default is `5000`
-   - Set `database.host`, `port`, `user`, `password`, `name`
-2. Run the API:
-   - `go run ./cmd`
-   - Or specify a custom config: `CONFIG_PATH=config.docker.yaml go run ./cmd`
-3. Visit Swagger UI: `http://localhost:5000/swagger/index.html`
+```bash
+docker compose up --build
+```
 
-## Swagger Docs (generate/update)
-This repo already includes generated docs in `./docs`. If you change annotations and need to regenerate:
-- Install the CLI: `go install github.com/swaggo/swag/cmd/swag@latest`
-- Generate docs: `$(go env GOPATH)/bin/swag init -g cmd/main.go -o docs`
+This starts MySQL with the Chinook data loaded and the API on `http://localhost:5000`. On macOS, port 5000 is often taken by AirPlay; use `APP_PORT=5050 docker compose up --build` instead.
 
-You can also run a Swagger-only mode without a DB connection to preview the docs:
-- `CONFIG_PATH=config.swagger.yaml SWAGGER_ONLY=1 go run ./cmd`
-- Open `http://localhost:5051/swagger/index.html`
+Swagger UI: `http://localhost:5000/swagger/index.html`
 
 ## Endpoints
-- `GET /analytics/top-genres?limit=10`
-- `GET /analytics/top-countries?limit=5`
-- `GET /analytics/media-types`
-- `GET /analytics/highest-sale`
-- `GET /analytics/invoice-stats`
-- `GET /analytics/agents`
 
-See Swagger for detailed schemas and examples.
+| Endpoint | Answers |
+|---|---|
+| `GET /analytics/top-genres?limit=10` | Genres by revenue, with share of total |
+| `GET /analytics/top-countries?limit=5` | Countries by customer count, and by average order value |
+| `GET /analytics/media-types` | Revenue per media type, with share of total |
+| `GET /analytics/highest-sale` | The largest invoice(s) and who placed them |
+| `GET /analytics/invoice-stats` | Median and mode of invoice totals |
+| `GET /analytics/agents` | Revenue and transaction count per support agent |
 
-## Docker
-Build and run the containerized API:
-- Build: `docker build -t music-analyze:latest .`
-- Run: `docker run --rm -p 5000:5000 -e CONFIG_PATH=/app/config.yaml music-analyze:latest`
+Example, against the bundled data:
 
-Compose (simple app container):
-- `docker-compose up --build`
-- API listens on `http://localhost:5000`
+```bash
+$ curl -s 'localhost:5000/analytics/top-genres?limit=3'
+[{"genre":"Rock","genre_sales":826.65,"pct_of_total":35.499871},
+ {"genre":"Latin","genre_sales":382.14,"pct_of_total":16.410719},
+ {"genre":"Metal","genre_sales":261.36,"pct_of_total":11.223911}]
 
-Note: You must provide a reachable MySQL database via configuration. The sample `config.docker.yaml` expects a host named `db`, but this compose file does not start MySQL. Point to your own DB or extend the compose file with a MySQL service.
+$ curl -s localhost:5000/analytics/invoice-stats
+{"median_total":3.96,"mode_total":1.98}
+```
 
-## Database
-- A Chinook schema/data script is provided at `internal/infra/db/mysql/DB.sql`.
-- The queries in this service are written for a lowercase/snake_case variant of Chinook. If you import the original CamelCase schema, you may need to adjust the table/column names or use the provided script to create a compatible schema.
+Errors return `500 internal error`; the underlying database error is logged, not sent to the client.
+
+## How the numbers are computed
+
+All aggregation happens in SQL (`internal/infra/db/mysql/analyze_repo.go`):
+
+- Shares of total use a CTE per group plus `SUM(...) OVER ()`, so one query returns both the group total and the grand total.
+- The median orders invoices with `ROW_NUMBER()` and averages the middle one or two rows, which works for both odd and even counts.
+- The mode is the most frequent invoice total, ties broken by the larger value.
+- Highest sale returns every invoice that matches the maximum total, not just the first.
+
+## Data
+
+`internal/infra/db/mysql/DB.sql` is the Chinook MySQL script (original CamelCase tables) followed by snake_case views (`invoice`, `invoice_line`, `customer`, ...). The queries read the views. Docker Compose loads the script on first start; to load it into your own MySQL:
+
+```bash
+mysql -uroot -p < internal/infra/db/mysql/DB.sql
+```
 
 ## Configuration
-- `CONFIG_PATH`: path to the YAML config (default `config.yaml`)
-- `SWAGGER_ONLY`: if `1` or `true`, starts only the Swagger UI without DB connections (useful for previewing docs)
 
-## Project Layout
-- `cmd/main.go`: entrypoint, router, Swagger wiring
-- `internal/http/analytics`: HTTP handlers and routes
-- `internal/application/analyst`: application service layer
-- `internal/domain/analyst`: domain entities and repository port
-- `internal/infra/db/mysql`: MySQL repository implementation and connection
-- `docs/`: generated Swagger files (imported by the app)
+The service reads a YAML file from `CONFIG_PATH` (default `config.yaml`). `config.docker.yaml` is the one used in Docker; copy it to `config.yaml` and change `database.host` to run locally:
 
-## Development
-- Tidy deps: `go mod tidy`
-- Build: `go build ./...`
-- Run: `go run ./cmd`
+```yaml
+server:
+  port: 5000
+database:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: example
+  name: music_analyze
+```
+
+```bash
+go run ./cmd
+```
+
+## Tests
+
+```bash
+go test ./...                                     # handler tests; repository tests skip
+docker compose up -d db
+MYSQL_DSN='root:example@tcp(127.0.0.1:3306)/music_analyze?parseTime=true' go test ./...
+```
+
+The repository tests run every query against the real Chinook data and check known answers (Rock is the top genre, the USA has 13 customers, there are 412 invoices across three agents, and so on). CI runs them against a MySQL service container.
+
+## Layout
+
+```
+cmd/main.go                    entrypoint, router, Swagger wiring
+internal/domain/analyst        result types and the repository port
+internal/application/analyst   use cases
+internal/http/analytics        HTTP handlers
+internal/infra/db/mysql        MySQL repository, connection, Chinook script
+docs/                          generated Swagger files (swag init -g cmd/main.go -o docs)
+```
 
 ## License
-This project includes the Chinook sample database script. See the original Chinook license for terms. The rest of the code is provided without a specific license unless otherwise stated.
+
+The Chinook script is by Luis Rocha under its own license (see the header of `DB.sql`).
