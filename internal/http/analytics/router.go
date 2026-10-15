@@ -1,31 +1,32 @@
 package analytics
 
 import (
-    "encoding/json"
-    "net/http"
-    "strconv"
+	"encoding/json"
+	"log"
+	"net/http"
+	"strconv"
 
-    "github.com/go-chi/chi/v5"
-    appsvc "github.com/bryanwahyu/analyze/internal/application/analyst"
-    analyst "github.com/bryanwahyu/analyze/internal/domain/analyst"
+	appsvc "github.com/bryanwahyu/analyze/internal/application/analyst"
+	analyst "github.com/bryanwahyu/analyze/internal/domain/analyst"
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
-    Svc *appsvc.Service
+	Svc *appsvc.Service
 }
 
 func NewRouter(svc *appsvc.Service) http.Handler {
-    h := &Handler{Svc: svc}
-    r := chi.NewRouter()
+	h := &Handler{Svc: svc}
+	r := chi.NewRouter()
 
-    r.Get("/analytics/top-genres", h.getTopGenres)
-    r.Get("/analytics/top-countries", h.getTopCountries)
-    r.Get("/analytics/media-types", h.getMediaTypes)
-    r.Get("/analytics/highest-sale", h.getHighestSale)
-    r.Get("/analytics/invoice-stats", h.getInvoiceStats)
-    r.Get("/analytics/agents", h.getAgents)
+	r.Get("/analytics/top-genres", h.getTopGenres)
+	r.Get("/analytics/top-countries", h.getTopCountries)
+	r.Get("/analytics/media-types", h.getMediaTypes)
+	r.Get("/analytics/highest-sale", h.getHighestSale)
+	r.Get("/analytics/invoice-stats", h.getInvoiceStats)
+	r.Get("/analytics/agents", h.getAgents)
 
-    return r
+	return r
 }
 
 // getTopGenres godoc
@@ -38,9 +39,9 @@ func NewRouter(svc *appsvc.Service) http.Handler {
 // @Failure 500 {string} string "internal error"
 // @Router /analytics/top-genres [get]
 func (h *Handler) getTopGenres(w http.ResponseWriter, r *http.Request) {
-    limit := parseIntQuery(r, "limit", 10)
-    res, err := h.Svc.TopGenres(r.Context(), limit)
-    respond(w, res, err)
+	limit := parseIntQuery(r, "limit", 10)
+	res, err := h.Svc.TopGenres(r.Context(), limit)
+	respond(w, res, err)
 }
 
 // getTopCountries godoc
@@ -53,9 +54,9 @@ func (h *Handler) getTopGenres(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "internal error"
 // @Router /analytics/top-countries [get]
 func (h *Handler) getTopCountries(w http.ResponseWriter, r *http.Request) {
-    limit := parseIntQuery(r, "limit", 5)
-    res, err := h.Svc.TopCountries(r.Context(), limit)
-    respond(w, res, err)
+	limit := parseIntQuery(r, "limit", 5)
+	res, err := h.Svc.TopCountries(r.Context(), limit)
+	respond(w, res, err)
 }
 
 // getMediaTypes godoc
@@ -67,8 +68,8 @@ func (h *Handler) getTopCountries(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "internal error"
 // @Router /analytics/media-types [get]
 func (h *Handler) getMediaTypes(w http.ResponseWriter, r *http.Request) {
-    res, err := h.Svc.MediaTypeSales(r.Context())
-    respond(w, res, err)
+	res, err := h.Svc.MediaTypeSales(r.Context())
+	respond(w, res, err)
 }
 
 // getHighestSale godoc
@@ -80,8 +81,8 @@ func (h *Handler) getMediaTypes(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "internal error"
 // @Router /analytics/highest-sale [get]
 func (h *Handler) getHighestSale(w http.ResponseWriter, r *http.Request) {
-    res, err := h.Svc.HighestSaleInvoices(r.Context())
-    respond(w, res, err)
+	res, err := h.Svc.HighestSaleInvoices(r.Context())
+	respond(w, res, err)
 }
 
 // getInvoiceStats godoc
@@ -93,8 +94,8 @@ func (h *Handler) getHighestSale(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "internal error"
 // @Router /analytics/invoice-stats [get]
 func (h *Handler) getInvoiceStats(w http.ResponseWriter, r *http.Request) {
-    res, err := h.Svc.InvoiceStats(r.Context())
-    respond(w, res, err)
+	res, err := h.Svc.InvoiceStats(r.Context())
+	respond(w, res, err)
 }
 
 // getAgents godoc
@@ -106,29 +107,30 @@ func (h *Handler) getInvoiceStats(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "internal error"
 // @Router /analytics/agents [get]
 func (h *Handler) getAgents(w http.ResponseWriter, r *http.Request) {
-    res, err := h.Svc.SalesByAgents(r.Context())
-    respond(w, res, err)
+	res, err := h.Svc.SalesByAgents(r.Context())
+	respond(w, res, err)
 }
 
 func parseIntQuery(r *http.Request, key string, def int) int {
-    v := r.URL.Query().Get(key)
-    if v == "" {
-        return def
-    }
-    n, err := strconv.Atoi(v)
-    if err != nil || n <= 0 {
-        return def
-    }
-    return n
+	v := r.URL.Query().Get(key)
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return def
+	}
+	return n
 }
 
 func respond(w http.ResponseWriter, v any, err error) {
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-    w.Header().Set("Content-Type", "application/json")
-    _ = json.NewEncoder(w).Encode(v)
+	if err != nil {
+		log.Printf("analytics: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(v)
 }
 
 // keep import of analyst for swagger model references
