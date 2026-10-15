@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: example
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -pexample"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      MYSQL_DSN: root:example@tcp(127.0.0.1:3306)/music_analyze?parseTime=true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Load Chinook
+        run: mysql -h127.0.0.1 -uroot -pexample < internal/infra/db/mysql/DB.sql
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: docker build -t music-analyze .
