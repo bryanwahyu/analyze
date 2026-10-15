@@ -8,22 +8,22 @@ package main
 //  @BasePath        /
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "net/http"
-    "os"
-    "os/signal"
-    "syscall"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-    "github.com/go-chi/chi/v5"
-    "github.com/bryanwahyu/analyze/internal/config"
-    appanalyst "github.com/bryanwahyu/analyze/internal/application/analyst"
-    analyticsHTTP "github.com/bryanwahyu/analyze/internal/http/analytics"
-    mysqlp "github.com/bryanwahyu/analyze/internal/infra/db/mysql"
-    httpSwagger "github.com/swaggo/http-swagger"
-    docs "github.com/bryanwahyu/analyze/docs"
+	docs "github.com/bryanwahyu/analyze/docs"
+	appanalyst "github.com/bryanwahyu/analyze/internal/application/analyst"
+	"github.com/bryanwahyu/analyze/internal/config"
+	analyticsHTTP "github.com/bryanwahyu/analyze/internal/http/analytics"
+	mysqlp "github.com/bryanwahyu/analyze/internal/infra/db/mysql"
+	"github.com/go-chi/chi/v5"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -48,26 +48,26 @@ func main() {
 	}
 	defer db.Close()
 
-    // init repo and service
-    analystRepo := mysqlp.NewAnalystRepository(db)
-    analystSvc := appanalyst.NewService(analystRepo)
+	// init repo and service
+	analystRepo := mysqlp.NewAnalystRepository(db)
+	analystSvc := appanalyst.NewService(analystRepo)
 
-    // init router
-    mux := chi.NewRouter()
+	// init router
+	mux := chi.NewRouter()
 
-    // swagger docs metadata (override at runtime if needed)
-    docs.SwaggerInfo.Title = "Music Analyze API"
-    docs.SwaggerInfo.Description = "API endpoints for music analytics derived from Chinook dataset."
-    docs.SwaggerInfo.Version = "1.0"
-    docs.SwaggerInfo.BasePath = "/"
+	// swagger docs metadata (override at runtime if needed)
+	docs.SwaggerInfo.Title = "Music Analyze API"
+	docs.SwaggerInfo.Description = "API endpoints for music analytics derived from Chinook dataset."
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.BasePath = "/"
 
-    // swagger UI endpoint
-    mux.Get("/swagger/*", httpSwagger.Handler(
-        httpSwagger.URL("/swagger/doc.json"),
-    ))
+	// swagger UI endpoint
+	mux.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
-    // app routes
-    mux.Mount("/", analyticsHTTP.NewRouter(analystSvc))
+	// app routes
+	mux.Mount("/", analyticsHTTP.NewRouter(analystSvc))
 
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
 	srv := &http.Server{
